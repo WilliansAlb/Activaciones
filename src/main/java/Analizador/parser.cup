@@ -1,0 +1,114 @@
+package Analizador;
+
+import java_cup.runtime.Symbol;
+import java_cup.runtime.XMLElement;
+import Interprete.*;
+import java.util.List;
+
+parser code
+{:
+    public Programa pro;
+
+    public void syntax_error(Symbol cur_token) {
+        System.out.println(" Se esperaban: ");
+        String esperados = "";
+        for (int i = 0; i < expected_token_ids().size(); i++){
+            esperados += symbl_name_from_id(expected_token_ids().get(i))+"-";
+        }
+        System.out.print(esperados+", pero se encontro "+cur_token.value+" en la linea"+cur_token.right+" y en la columna"+cur_token.left);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+        System.out.println("reportfatal "+message+info);
+    }
+    
+    public void report_fatal_error(Symbol cur) {
+        System.out.println("unrecovered_syntax_error");
+    }
+
+    public void imp(String texto){
+        System.out.println(texto);
+    }
+
+    protected int error_sync_size() {
+        return 1;
+    }
+
+:};
+
+terminal PROG, PROC, END, BEGIN, ID, NUMERO, ASIG, PA, PC, PYC, DOSP, INT, COMA, ERRORLEX;
+
+non terminal programa;
+
+non terminal List<Metodo> procedimientos;
+non terminal Metodo procedimiento;
+non terminal List<String> parametros, parametrosp;
+non terminal String parametro;
+non terminal List<Instruccion> bloque, definicion;
+non terminal Instruccion instruccion;
+non terminal Llamada llamada, llamada2;
+non terminal Asignacion asignacion, declaracion;
+
+start with programa;
+
+programa::=
+    PROG ID:e3 procedimientos:e1 definicion:e2 {: imp("terminado"); pro = new Programa(e1,e2, e3); :}
+;
+
+procedimientos::=
+    procedimientos:e1 procedimiento:e2 {: e1.add(e2); RESULT = e1; :}
+|   procedimiento:e1 {: RESULT = new LinkedList<>(); RESULT.add(e1); :}
+;
+
+definicion::=
+    BEGIN bloque:e1 END {: RESULT = e1; :}
+;
+
+procedimiento::=
+    PROC ID:e1 PA parametros:e2 PC bloque:e3 END {: RESULT = new Metodo(e1.toString(), true, e2, e3, "integer", "0"); :}
+;
+
+bloque::=
+    bloque:e1 instruccion:e2 {: e1.add(e2); RESULT = e1; :}
+|   instruccion:e1 {: RESULT = new LinkedList<>(); RESULT.add(e1); :}
+;
+
+instruccion::=
+    declaracion:e1  {: RESULT = e1; :}
+|   asignacion:e1  {: RESULT = e1; :}
+|   llamada:e1  {: RESULT = e1; :}
+;
+
+declaracion::=
+    ID:e1 DOSP INT:e2 PYC {: RESULT = new Asignacion(e1.toString(), "declaracion", false, null, null, "integer"); :}
+;
+
+asignacion::=
+    ID:e1 ASIG llamada2:e2 PYC  {: List<Instruccion> n = new LinkedList<>(); n.add(e2); RESULT = new Asignacion(e1.toString(), "asignacion-metodo", false, n, null, ""); :}
+;
+
+llamada2::=
+    ID:e1 PA parametros:e2 PC {: RESULT = new Llamada(e1.toString(), "llamada", false, null, e2, ""); :}
+;
+
+llamada::=
+    ID:e1 PA parametros:e2 PC PYC {: RESULT = new Llamada(e1.toString(), "llamada", false, null, e2, ""); :}
+;
+
+parametros::=
+    {: RESULT = null; :}
+|   parametrosp:e1 {: RESULT = e1; :}
+;
+
+parametrosp::=
+    parametros:e1 COMA parametro:e2 {: e1.add(e2); RESULT = e1; :}
+|   parametro:e1  {: RESULT = new LinkedList<>(); RESULT.add(e1); :}
+;
+
+parametro::=
+    NUMERO:e1   {: RESULT = e1.toString(); :}
+|   ID:e1 {: RESULT = e1.toString(); :}
+;
+
+
+
