@@ -172,31 +172,50 @@ public class Principal extends javax.swing.JFrame {
                 Programa p = par.pro;
                 List<Instruccion> ins = p.getPrincipal();
                 List<Metodo> met = p.getMetodos();
-                for (int i = 0; i < ins.size(); i++) {
-                    System.out.println(ins.get(i).getTipo());
-                    if (ins.get(i).getTipo().equalsIgnoreCase("asignacion-metodo")) {
-                        if (!ins.get(i).getHeredadas().isEmpty()) {
-                            Llamada ll = (Llamada) ins.get(i).getHeredadas().get(0);
-                            System.out.println("llama al metodo " + ll.getId());
-                            int existe = -1;
-                            for (int j = 0; j < met.size(); j++) {
-                                if (met.get(i).id.equalsIgnoreCase(ll.getId())) {
-                                    existe = i;
-                                    break;
-                                }
-                            }
-                            if (existe>=0) {
-                                List<Instruccion> mets = met.get(existe).instrucciones;
-                            }
-                        }
-                    }
-                }
+                operar(ins, met);
 
             } catch (Exception ex) {
                 Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_btn_crearActionPerformed
+
+    public void operar(List<Instruccion> ins, List<Metodo> met) {
+        for (int i = 0; i < ins.size(); i++) {
+            System.out.println(ins.get(i).getTipo());
+            if (ins.get(i).getTipo().equalsIgnoreCase("asignacion-metodo")) {
+                if (!ins.get(i).getHeredadas().isEmpty()) {
+                    Llamada ll = (Llamada) ins.get(i).getHeredadas().get(0);
+                    System.out.println("llama al metodo " + ll.getId());
+                    int existe = -1;
+                    for (int j = 0; j < met.size(); j++) {
+                        if (met.get(j).id.equalsIgnoreCase(ll.getId())) {
+                            existe = j;
+                            break;
+                        }
+                    }
+                    if (existe >= 0) {
+                        List<Instruccion> mets = met.get(existe).instrucciones;
+                        operar(mets, met);
+                    }
+                }
+            } else if (ins.get(i).getTipo().equalsIgnoreCase("llamada")) {
+                Llamada ll = (Llamada) ins.get(i);
+                System.out.println("llama al metodo " + ll.getId());
+                int existe = -1;
+                for (int j = 0; j < met.size(); j++) {
+                    if (met.get(j).id.equalsIgnoreCase(ll.getId())) {
+                        existe = j;
+                        break;
+                    }
+                }
+                if (existe >= 0) {
+                    List<Instruccion> mets = met.get(existe).instrucciones;
+                    operar(mets, met);
+                }
+            }
+        }
+    }
 
     /**
      * @param args the command line arguments
